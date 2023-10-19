@@ -5,6 +5,10 @@ OpenWrt support for the Linksys EA9500, EA9200
 This repository aims to support the Linksys EA9500 `(linksys,panamera)` using the `swconfig` driver and configuration framework.
 Support for EA9200 is added using the already existing brcmfmac drivers. 
 
+# Build from scratch method I used
+
+See INSTALL.md for more information.
+
 ## Components
 *[ea_9x00 Support] : Adds LED, switch, and dual-partition support for the Linksys EA9500, LinkSys EA9200
 
