@@ -45,12 +45,10 @@ nano +276 target/linux/bcm53xx/image/Makefile
 ```
 make menuconfig
 ```
-
-   i. Target System --> BCM47XX/53XX (ARM)
-   ii. Target Profile --> Linksys EA9200 v1
-   iii. Right arrow to "Save"
-   iv. See [my.config](my.config) for all the packages I (pre-)installed
-
+  - Target System --> BCM47XX/53XX (ARM)
+  - Target Profile --> Linksys EA9200 v1
+  - Right arrow to "Save"
+  - See [my.config](my.config) for all the packages I (pre-)installed
 7. Download all sources upfront
 ```
 make download
