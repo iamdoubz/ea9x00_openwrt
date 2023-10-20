@@ -1,88 +1,66 @@
 ea9x00_openwrt
 =====
-OpenWrt support for the Linksys EA9500, EA9200
 
-This repository aims to support the Linksys EA9500 `(linksys,panamera)` using the `swconfig` driver and configuration framework.
-Support for EA9200 is added using the already existing brcmfmac drivers. 
+# Compile steps for Linksys EA9200
 
-# Build from scratch method I used
+## Prerequisites
 
-See [INSTALL.md](INSTALL.md) for more information.
+Source: https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem
 
-## Components
-*[ea_9x00 Support] : Adds LED, switch, and dual-partition support for the Linksys EA9500, LinkSys EA9200
-
-## Building
-
-### Step 1
-To build OpenWrt for the EA9500, you must first add this feed to your `feeds.conf`
-
+### Debian/Ubuntu
 ```
-src-git ea9500_openwrt https://github.com/hurrian/ea9500_openwrt.git
-
-$ ./scripts/feeds update -a
-$ ./scripts/feeds install -a
-```
-### Step 2
-The custom configuration overlay needs to be enabled by using the [custom files](https://openwrt.org/docs/guide-developer/build-system/use-buildsystem#custom_files) feature of the OpenWrt buildroot.
-While in your buildroot directory (ex. ``~/openwrt``), run the following command:
-
-```
-~/openwrt $   ln -s feeds/ea9500_openwrt/files files
+sudo apt update && sudo apt install build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+sudo apt install libboost-dev libxml-parser-perl libusb-dev bin86 bcc sharutils gcc-multilib b43-fwcutter zip openjdk-8-jdk-headless libpam0g-dev liblzma-dev libsnmp-dev libpcre2-dev libacl1-dev libattr1-dev
+#pcre2-dev python-tomli python-poetry-core python3-editables python3-pathspec python3-trove-classifiers python-pluggy python-typing-extensions
 ```
 
-### Step 3
-#### EA9500
-You must then enable the Linksys EA9500 target in `target/linux/bcm53xx/image/Makefile` by uncommenting `TARGET_DEVICES += linksys-ea9500`.
+## Build system usage
 
+Source: https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem
+
+### Steps
+
+1. Pull in openwrt source code (~191MB)
 ```
-define Device/linksys-ea9500
-  DEVICE_VENDOR := Linksys
-  DEVICE_MODEL := EA9500
-  DEVICE_PACKAGES := $(BRCMFMAC_4366C0) $(USB3_PACKAGES)
-  DEVICE_DTS := bcm47094-linksys-panamera
-endef
-TARGET_DEVICES += linksys-ea9500
+git clone https://git.openwrt.org/openwrt/openwrt.git
+```
+2. Find what version of openwrt you want to use
+```
+git branch -a && git tag
+```
+3. Checkout that version
+```
+git checkout opernwrt-22.03
+```
+4. Update and install the feeds (whatever this means) (~240MB)
+```
+./scripts/feeds update -a
+./scripts/feeds install -a
+```
+5. Ensure the EA9200 target is enabled
+```
+nano +276 target/linux/bcm53xx/image/Makefile
+```
+6. Configure the firmware image
+```
+make menuconfig
 ```
 
-#### EA9200
-For EA9200, uncomment the following line from `target/linux/bcm53xx/image/Makefile`
+   i. Target System --> BCM47XX/53XX (ARM)
+   ii. Target Profile --> Linksys EA9200 v1
+   iii. Right arrow to "Save"
+   iv. See [my.config](my.config) for all the packages I (pre-)installed
+
+7. Download all sources upfront
 ```
-define Device/linksys-ea9200
-  DEVICE_VENDOR := Linksys
-  DEVICE_MODEL := EA9200
-  DEVICE_VARIANT := v1
-  DEVICE_PACKAGES := $(BRCMFMAC_43602A1) $(USB3_PACKAGES)
-endef
-TARGET_DEVICES += linksys-ea9200
+make download
 ```
-
-### Step 4 (Optional , Not tested on EA9200))
-Copy `999-vX.XX-0001-ARM-dts-BCM47094-LinksysPanamera-Specify-Flash-Partitions.patch` to `target/linux/bcm53xx/patches-4.14` to allow access to some extra space at the end of the router's flash.
-
+8. Build the image
 ```
-~/openwrt $ cp feeds/ea9500_openwrt/999-vX.XX-0001-ARM-dts-BCM47094-LinksysPanamera-Specify-Flash-Partitions.patch target/linux/bcm53xx/patches-4.14/
+make -j $(($(nproc)+1)) V=s
 ```
-
-### Step 5
-In `make menuconfig`, select `Base System -> ea9x00_support <*>`.
-
-### Step 6
-Issue the command to build OpenWrt.
+9. Your new build will be in the `bin/targets/bcm53xx/generic` folder
 ```
-~/openwrt $ make V=s
+cd bin/targets/bcm53xx/generic
+ls -lh
 ```
-You will find the built images at `bin/targets/bcm53xx/generic`.
-
-## Quirks
-The EA9500's CPU ports are directly connected to a BCM53012 switch wired to LAN4,7,8 plus an external BCM53125 switch wired to LAN1,2,3,5,6.
-This means that you will only see the internal BCM53012 ports in LuCI's switch configuration.
-
-For some reason, the latest Broadcom firmware from `linux-firmware` (10.10.122.x) is not properly supported by brcmfmac - using the newer version will render `radio2` non-functional.
-This repository includes the latest known working version of BCM4366C0 firmware for EA9500 (10.10.69.69).
-
-## License
-Files are licensed under the terms of GNU GPLv2 License; see LICENSE file for details.
-
-## Credits
-Credit goes to [Vivek Unune / npcomplete13](https://github.com/npcomplete13/openwrt) for figuring out the EA9500.
