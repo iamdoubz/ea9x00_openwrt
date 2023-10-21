@@ -30,7 +30,7 @@ git branch -a && git tag
 ```
 3. Checkout that version
 ```
-git checkout opernwrt-22.03
+git checkout opernwrt-23.05
 ```
 4. Update and install the feeds (whatever this means) (~240MB)
 ```
